@@ -1,0 +1,107 @@
+import datetime
+
+COMMANDS = [
+    'reserve',
+    'release',
+    'releaseall',
+    'status',
+]
+
+PROMPT = 'tonbot> '
+
+class HOST:
+    def __init__(self, name):
+        self.name = name
+        self.reserved = False
+        self.reservedby = None
+        self.reserve_time = None
+        self.reserve_reason = None
+
+    def reserve(self, hostN, duration, reason):
+        if not self.reserved:
+            self.reserved = True
+            self.reservedby = hostN
+            self.reserve_time = datetime.datetime.now() + datetime.timedelta(minutes=duration)
+            self.reserve_reason = reason
+
+            print("Your reservation was successful: ")
+            print(f"{self.name} is reserved by {hostN} for {duration} minutes. Reason: {reason}")
+        else:
+            print(f" '{self.name}' is already reserved by {self.reservedby} until {self.reserve_time}.")
+
+    def release(self):
+        if self.reserved:
+            print(f"{self.name} reservation has been released.")
+            self.reserved = False
+            self.reservedby = None
+            self.reserve_time = None
+            self.reserve_reason = None
+        else:
+            print(f" '{self.name}' is not currently reserved.")  
+
+    def releaseall(resources):
+        for host_name, host in resources.items():
+            if host.reserved:
+                host.release()
+
+    def status(resources):
+        for host_name, host in resources.items():
+            if host.reserved:
+                print(f" '{host_name}' is reserved by {host.reservedby} until {host.reserve_time}. Reason: {host.reserve_reason}")
+            else:
+                print(f" '{host_name}' is not reserved.")
+
+
+def main():
+    tonbot1 = HOST('tonbot')
+    resources = {
+        'host1': HOST('host1'),
+        'host2': HOST('host2'),
+        'host3': HOST('host3')
+    }
+
+    while True:
+        print(PROMPT, end='')
+        inp = input()
+        input_command = inp.split(' ')
+
+        if input_command[0] == 'exit' or input_command[0] == 'quit':
+            return
+
+        if input_command[0] not in COMMANDS:
+            print(f"Invalid command: {input_command[0]}")
+            continue
+
+        if input_command[0] == 'reserve':
+            if len(input_command) != 5:
+                print("Invalid command: requires 4 arguments.")
+                continue
+
+            hostN = input("Enter your name: ")
+            host_name = input_command[1]
+            if host_name not in resources:
+                print(f" '{host_name}' does not exist.")
+                continue
+
+            duration = int(input_command[3])
+            reason = input_command[4]
+
+            resources[host_name].reserve(hostN, duration, reason) 
+
+        elif input_command[0] == 'release':
+            host_name = input_command[1]
+            if host_name in resources:
+                resources[host_name].release()
+            else:
+                print(f" '{host_name}' does not exist.")
+
+        elif input_command[0] == 'releaseall':
+            HOST.releaseall(resources)
+        elif input_command[0] == 'status':
+            HOST.status(resources)
+
+        else:
+            print("Invalid command.")
+
+if __name__ == '__main__':
+    main()
